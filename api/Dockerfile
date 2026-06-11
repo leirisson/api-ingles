@@ -2,10 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm ci --omit=dev
 
-COPY src/ ./src/
+COPY api/src/ ./src/
 
 ENV NODE_ENV=production \
     PORT=3334
