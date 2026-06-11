@@ -146,6 +146,7 @@
       <div id="nav-teacher" class="hidden flex gap-1">
         <button onclick="navigate('t-students')" data-nav="t-students" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Alunos</button>
         <button onclick="navigate('t-ranking')"  data-nav="t-ranking"  class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Ranking</button>
+        <button onclick="navigate('t-content')"  data-nav="t-content"  class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Conteúdo</button>
       </div>
 
       <div class="flex items-center gap-3">
@@ -265,6 +266,62 @@
       <div id="t-ranking-table" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"></div>
     </section>
 
+    <!-- ── TEACHER: Conteúdo ── -->
+    <section id="page-t-content" class="hidden fade-in space-y-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold text-white">Biblioteca de Conteúdo</h2>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="downloadCSVTemplate()"
+            class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Template CSV
+          </button>
+          <button onclick="openImportModal()"
+            class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
+            Importar CSV
+          </button>
+          <button onclick="openContentModal()"
+            class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Novo
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="flex flex-wrap gap-2">
+        <select id="content-filter-level" onchange="filterContent()"
+          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Todos os níveis</option>
+          <option value="A1">A1</option><option value="A2">A2</option>
+          <option value="B1">B1</option><option value="B2">B2</option>
+          <option value="C1">C1</option><option value="C2">C2</option>
+        </select>
+        <select id="content-filter-type" onchange="filterContent()"
+          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Todos os tipos</option>
+          <option value="lesson">Lição</option>
+          <option value="quiz">Quiz</option>
+          <option value="exercise">Exercício</option>
+        </select>
+        <select id="content-filter-rule" onchange="filterContent()"
+          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Todas as regras</option>
+          <option value="1">Regra 1</option><option value="2">Regra 2</option>
+          <option value="3">Regra 3</option><option value="4">Regra 4</option>
+          <option value="5">Regra 5</option><option value="6">Regra 6</option>
+          <option value="7">Regra 7</option><option value="8">Regra 8</option>
+          <option value="9">Regra 9</option><option value="10">Regra 10</option>
+          <option value="11">Regra 11</option><option value="12">Regra 12</option>
+          <option value="13">Regra 13</option><option value="14">Regra 14</option>
+          <option value="15">Regra 15</option><option value="16">Regra 16</option>
+        </select>
+      </div>
+
+      <div id="content-list" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"></div>
+    </section>
+
   </main>
 </div>
 
@@ -330,6 +387,168 @@
     <div class="flex gap-3">
       <button onclick="closeConfirmModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
       <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── MODAL: Criar/Editar conteúdo ────────────────────────── -->
+<div id="modal-content" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-lg shadow-2xl fade-in">
+    <div class="flex items-center justify-between p-5 border-b border-slate-800">
+      <h3 id="modal-content-title" class="font-semibold text-white text-sm">Novo Conteúdo</h3>
+      <button onclick="closeContentModal()" class="text-slate-500 hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="content-form" class="p-5 space-y-4" onsubmit="submitContentForm(event)">
+      <input type="hidden" id="modal-content-id" />
+      <div id="modal-content-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"></div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Título</label>
+          <input id="modal-content-titleval" type="text" required
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Tipo</label>
+          <select id="modal-content-type"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+            <option value="lesson">Lição</option>
+            <option value="quiz">Quiz</option>
+            <option value="exercise">Exercício</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Nível</label>
+          <select id="modal-content-level"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+            <option value="A1">A1</option><option value="A2">A2</option>
+            <option value="B1" selected>B1</option><option value="B2">B2</option>
+            <option value="C1">C1</option><option value="C2">C2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Regra (1–16)</label>
+          <select id="modal-content-rule"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+            <option value="1">Regra 1</option><option value="2">Regra 2</option>
+            <option value="3">Regra 3</option><option value="4">Regra 4</option>
+            <option value="5">Regra 5</option><option value="6">Regra 6</option>
+            <option value="7">Regra 7</option><option value="8">Regra 8</option>
+            <option value="9">Regra 9</option><option value="10">Regra 10</option>
+            <option value="11">Regra 11</option><option value="12">Regra 12</option>
+            <option value="13">Regra 13</option><option value="14">Regra 14</option>
+            <option value="15">Regra 15</option><option value="16">Regra 16</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Pontos</label>
+          <input id="modal-content-points" type="number" min="0" value="10"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Ordem</label>
+          <input id="modal-content-order" type="number" min="0" value="0"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Body <span class="text-slate-600">(JSON opcional)</span></label>
+          <textarea id="modal-content-body" rows="4" placeholder="{}"
+            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 transition resize-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-1">
+        <button type="button" onclick="closeContentModal()"
+          class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
+        <button type="submit" id="modal-content-submit-btn"
+          class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ──────────────── MODAL: Confirmar exclusão de conteúdo ────────────────── -->
+<div id="modal-confirm-content" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-sm shadow-2xl fade-in p-6 text-center">
+    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+    </div>
+    <h3 class="font-semibold text-white mb-1">Remover conteúdo?</h3>
+    <p id="confirm-content-name" class="text-slate-400 text-sm mb-5"></p>
+    <div class="flex gap-3">
+      <button onclick="closeConfirmContentModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
+      <button onclick="confirmDeleteContent()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── MODAL: Importar CSV de conteúdo ─────────────────── -->
+<div id="modal-import-csv" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-lg shadow-2xl fade-in">
+    <div class="flex items-center justify-between p-5 border-b border-slate-800">
+      <div>
+        <h3 class="font-semibold text-white text-sm">Importar conteúdo via CSV</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Adicione múltiplos conteúdos de uma vez</p>
+      </div>
+      <button onclick="closeImportModal()" class="text-slate-500 hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <!-- Estado: aguardando arquivo -->
+      <div id="import-idle">
+        <label id="import-dropzone"
+          class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:border-brand-500 hover:bg-brand-500/5 transition group">
+          <svg class="w-8 h-8 text-slate-600 group-hover:text-brand-400 transition mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span id="import-filename" class="text-sm text-slate-500 group-hover:text-slate-300 transition">Clique ou arraste um arquivo .csv</span>
+          <span class="text-xs text-slate-600 mt-1">Máx. 5 MB</span>
+          <input id="import-file-input" type="file" accept=".csv" class="hidden" onchange="onImportFileChange(event)" />
+        </label>
+
+        <div class="mt-4 p-3 rounded-xl bg-slate-800/60 text-xs text-slate-500 space-y-1">
+          <p class="font-semibold text-slate-400">Colunas obrigatórias:</p>
+          <p><span class="text-brand-400 font-mono">title</span>, <span class="text-brand-400 font-mono">type</span> (lesson|quiz|exercise), <span class="text-brand-400 font-mono">level</span> (A1–C2), <span class="text-brand-400 font-mono">rule_number</span> (1–16)</p>
+          <p class="font-semibold text-slate-400 pt-1">Colunas opcionais:</p>
+          <p><span class="text-slate-400 font-mono">points_reward</span> (padrão 10), <span class="text-slate-400 font-mono">order_index</span> (padrão 0), <span class="text-slate-400 font-mono">body</span> (JSON)</p>
+        </div>
+      </div>
+
+      <!-- Estado: resultado da importação -->
+      <div id="import-result" class="hidden space-y-3">
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+            <div id="result-imported" class="text-2xl font-black text-emerald-400">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Importados</div>
+          </div>
+          <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+            <div id="result-skipped" class="text-2xl font-black text-amber-400">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Linhas inválidas</div>
+          </div>
+          <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+            <div id="result-failed" class="text-2xl font-black text-red-400">0</div>
+            <div class="text-xs text-slate-500 mt-0.5">Falhas</div>
+          </div>
+        </div>
+        <div id="result-errors-wrap" class="hidden">
+          <p class="text-xs font-semibold text-slate-400 mb-1.5">Detalhes dos problemas:</p>
+          <div id="result-errors" class="max-h-36 overflow-y-auto space-y-1 text-xs text-red-400 bg-slate-800/60 rounded-xl p-3 font-mono"></div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-1">
+        <button type="button" onclick="closeImportModal()"
+          class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Fechar</button>
+        <button id="import-submit-btn" type="button" onclick="submitImportCSV()"
+          class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+          Importar
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -493,6 +712,7 @@ function navigate(page) {
     history:   loadHistory,
     't-students': loadStudents,
     't-ranking':  () => loadTeacherRanking('global'),
+    't-content':  loadContent,
   }
   loaders[page]?.()
 }
@@ -922,12 +1142,286 @@ async function loadTeacherRanking(filter) {
   renderRankingTable('t-ranking-table', ranking)
 }
 
+// ── Teacher: Content list ─────────────────────────────────────────────
+let allContent = []
+let deleteContentTargetId = null
+
+async function loadContent() {
+  document.getElementById('content-list').innerHTML = `<div class="p-4 space-y-2">${skeleton(6)}</div>`
+  allContent = await api('GET', '/content')
+  filterContent()
+}
+
+function filterContent() {
+  const level = document.getElementById('content-filter-level').value
+  const type  = document.getElementById('content-filter-type').value
+  const rule  = document.getElementById('content-filter-rule').value
+
+  const filtered = allContent.filter(c =>
+    (!level || c.level === level) &&
+    (!type  || c.type === type) &&
+    (!rule  || String(c.rule_number) === rule)
+  )
+  renderContentList(filtered)
+}
+
+const contentTypeLabel = { lesson: 'Lição', quiz: 'Quiz', exercise: 'Exercício' }
+const contentTypeBadge = {
+  lesson:   'bg-blue-500/15 text-blue-400',
+  quiz:     'bg-purple-500/15 text-purple-400',
+  exercise: 'bg-orange-500/15 text-orange-400',
+}
+
+function renderContentList(items) {
+  const el = document.getElementById('content-list')
+  if (!items.length) {
+    el.innerHTML = `
+      <div class="text-center py-12">
+        <div class="text-4xl mb-3">📚</div>
+        <p class="text-slate-400 text-sm">Nenhum conteúdo encontrado.</p>
+        <p class="text-slate-600 text-xs mt-1">Clique em "Novo Conteúdo" para começar.</p>
+      </div>`
+    return
+  }
+
+  el.innerHTML = `
+    <div class="divide-y divide-slate-800">
+      ${items.map(c => `
+        <div class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-800/50 transition group">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-white truncate">${c.title}</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="inline-block px-2 py-0.5 rounded-md text-xs font-semibold ${contentTypeBadge[c.type] || 'bg-slate-700 text-slate-300'}">${contentTypeLabel[c.type] || c.type}</span>
+              ${levelBadge(c.level)}
+              <span class="text-xs text-slate-600">Regra ${c.rule_number}</span>
+            </div>
+          </div>
+          <div class="text-right flex-shrink-0 hidden sm:block">
+            <div class="text-amber-400 text-xs font-semibold">${c.points_reward} pts</div>
+            <div class="text-slate-600 text-xs">ordem ${c.order_index}</div>
+          </div>
+          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
+            <button onclick="openContentModal('${c.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+            <button onclick="openConfirmContentModal('${c.id}', ${JSON.stringify(c.title).replace(/"/g, '&quot;')})" class="p-1.5 rounded-lg bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-400 transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `
+}
+
+// ── Teacher: Content Modal ────────────────────────────────────────────
+function openContentModal(id) {
+  document.getElementById('modal-content-error').classList.add('hidden')
+  document.getElementById('modal-content-id').value = id || ''
+
+  if (id) {
+    const c = allContent.find(x => x.id === id)
+    document.getElementById('modal-content-title').textContent = 'Editar Conteúdo'
+    document.getElementById('modal-content-titleval').value = c?.title || ''
+    document.getElementById('modal-content-type').value  = c?.type || 'lesson'
+    document.getElementById('modal-content-level').value = c?.level || 'B1'
+    document.getElementById('modal-content-rule').value  = c?.rule_number || '1'
+    document.getElementById('modal-content-points').value = c?.points_reward ?? 10
+    document.getElementById('modal-content-order').value  = c?.order_index ?? 0
+    const body = c?.body && Object.keys(c.body).length ? JSON.stringify(c.body, null, 2) : ''
+    document.getElementById('modal-content-body').value = body
+  } else {
+    document.getElementById('modal-content-title').textContent = 'Novo Conteúdo'
+    document.getElementById('content-form').reset()
+    document.getElementById('modal-content-points').value = 10
+    document.getElementById('modal-content-order').value  = 0
+    document.getElementById('modal-content-level').value  = 'B1'
+  }
+
+  document.getElementById('modal-content').classList.remove('hidden')
+  document.getElementById('modal-content-titleval').focus()
+}
+
+function closeContentModal() {
+  document.getElementById('modal-content').classList.add('hidden')
+}
+
+async function submitContentForm(e) {
+  e.preventDefault()
+  const errEl = document.getElementById('modal-content-error')
+  errEl.classList.add('hidden')
+  const btn = document.getElementById('modal-content-submit-btn')
+  btn.disabled = true
+  btn.textContent = 'Salvando...'
+
+  const id = document.getElementById('modal-content-id').value
+  const bodyRaw = document.getElementById('modal-content-body').value.trim()
+
+  let bodyParsed = {}
+  if (bodyRaw) {
+    try { bodyParsed = JSON.parse(bodyRaw) } catch {
+      errEl.textContent = 'O campo Body contém JSON inválido.'
+      errEl.classList.remove('hidden')
+      btn.disabled = false
+      btn.textContent = 'Salvar'
+      return
+    }
+  }
+
+  const payload = {
+    title:         document.getElementById('modal-content-titleval').value,
+    type:          document.getElementById('modal-content-type').value,
+    level:         document.getElementById('modal-content-level').value,
+    rule_number:   parseInt(document.getElementById('modal-content-rule').value, 10),
+    points_reward: parseInt(document.getElementById('modal-content-points').value, 10),
+    order_index:   parseInt(document.getElementById('modal-content-order').value, 10),
+    body:          bodyParsed,
+  }
+
+  try {
+    if (id) {
+      await api('PATCH', `/content/${id}`, payload)
+    } else {
+      await api('POST', '/content', payload)
+    }
+    closeContentModal()
+    loadContent()
+  } catch (ex) {
+    errEl.textContent = ex.message
+    errEl.classList.remove('hidden')
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Salvar'
+  }
+}
+
+// ── Teacher: Delete Content Modal ─────────────────────────────────────
+function openConfirmContentModal(id, name) {
+  deleteContentTargetId = id
+  document.getElementById('confirm-content-name').textContent = `Isso removerá o conteúdo "${name}".`
+  document.getElementById('modal-confirm-content').classList.remove('hidden')
+}
+
+function closeConfirmContentModal() {
+  deleteContentTargetId = null
+  document.getElementById('modal-confirm-content').classList.add('hidden')
+}
+
+async function confirmDeleteContent() {
+  if (!deleteContentTargetId) return
+  try {
+    await api('DELETE', `/content/${deleteContentTargetId}`)
+    closeConfirmContentModal()
+    loadContent()
+  } catch (ex) {
+    alert(ex.message)
+  }
+}
+
+// ── Teacher: CSV Import ───────────────────────────────────────────────
+let importFile = null
+
+function openImportModal() {
+  importFile = null
+  document.getElementById('import-file-input').value = ''
+  document.getElementById('import-filename').textContent = 'Clique ou arraste um arquivo .csv'
+  document.getElementById('import-submit-btn').disabled = true
+  document.getElementById('import-idle').classList.remove('hidden')
+  document.getElementById('import-result').classList.add('hidden')
+  document.getElementById('modal-import-csv').classList.remove('hidden')
+}
+
+function closeImportModal() {
+  document.getElementById('modal-import-csv').classList.add('hidden')
+}
+
+function onImportFileChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  importFile = file
+  document.getElementById('import-filename').textContent = file.name
+  document.getElementById('import-submit-btn').disabled = false
+}
+
+async function submitImportCSV() {
+  if (!importFile) return
+
+  const btn = document.getElementById('import-submit-btn')
+  btn.disabled = true
+  btn.textContent = 'Importando...'
+
+  try {
+    const token = localStorage.getItem('token')
+    const fd = new FormData()
+    fd.append('file', importFile)
+
+    const res = await fetch(API + '/content/import-csv', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok && res.status !== 207) throw new Error(data.error || `HTTP ${res.status}`)
+
+    document.getElementById('import-idle').classList.add('hidden')
+    document.getElementById('result-imported').textContent = data.imported ?? 0
+    document.getElementById('result-skipped').textContent  = data.skipped_rows ?? 0
+    document.getElementById('result-failed').textContent   = data.failed_inserts ?? 0
+
+    const allErrors = [...(data.validation_errors || []), ...(data.insert_errors || [])]
+    if (allErrors.length) {
+      document.getElementById('result-errors').innerHTML = allErrors
+        .map(e => `<div>${e}</div>`).join('')
+      document.getElementById('result-errors-wrap').classList.remove('hidden')
+    } else {
+      document.getElementById('result-errors-wrap').classList.add('hidden')
+    }
+
+    document.getElementById('import-result').classList.remove('hidden')
+
+    if ((data.imported ?? 0) > 0) loadContent()
+  } catch (ex) {
+    alert('Erro ao importar: ' + ex.message)
+    btn.disabled = false
+    btn.textContent = 'Importar'
+  } finally {
+    btn.textContent = 'Importar'
+  }
+}
+
+function downloadCSVTemplate() {
+  const header = 'title,type,level,rule_number,points_reward,order_index,body'
+  const examples = [
+    '"Present Simple - To Be","lesson","A1",1,10,0,""',
+    '"Quiz: Articles a/an","quiz","A1",2,15,1,""',
+    '"Exercise: Past Tense","exercise","B1",5,20,0,""',
+  ]
+  const csv = [header, ...examples].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'template-conteudo.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ── Close modals on backdrop click ────────────────────────────────────
 document.getElementById('modal-student').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeStudentModal()
 })
 document.getElementById('modal-confirm').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeConfirmModal()
+})
+document.getElementById('modal-content').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeContentModal()
+})
+document.getElementById('modal-confirm-content').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirmContentModal()
+})
+document.getElementById('modal-import-csv').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeImportModal()
 })
 
 // ── Boot ──────────────────────────────────────────────────────────────

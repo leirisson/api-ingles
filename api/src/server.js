@@ -3,6 +3,7 @@ const fastify = require('fastify')({ logger: true })
 
 async function build() {
   await fastify.register(require('@fastify/cors'), { origin: true })
+  await fastify.register(require('@fastify/multipart'), { limits: { fileSize: 5 * 1024 * 1024 } })
 
   await fastify.register(require('@fastify/jwt'), {
     secret: process.env.JWT_SECRET,
