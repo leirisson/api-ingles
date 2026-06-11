@@ -2,8 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY serve.js ./
-COPY index.html ./
+COPY frontend/serve.js ./
+COPY frontend/index.html ./
 
 ENV PORT=8080
 
