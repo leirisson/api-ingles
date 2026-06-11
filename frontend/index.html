@@ -4,309 +4,463 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inglês AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            mono: ['DM Mono', 'monospace'],
+            body: ['DM Sans', 'sans-serif'],
+          },
           colors: {
-            brand: { 50:'#f0f9ff', 100:'#e0f2fe', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 900:'#0c4a6e' }
+            zinc: {
+              50:'#fafafa', 100:'#f4f4f5', 200:'#e4e4e7', 300:'#d4d4d8',
+              400:'#a1a1aa', 500:'#71717a', 600:'#52525b', 700:'#3f3f46',
+              800:'#27272a', 850:'#1f1f22', 900:'#18181b', 950:'#09090b',
+            },
+            lime: {
+              300:'#bef264', 400:'#a3e635', 500:'#84cc16',
+            },
+            ember: { 400:'#fb923c', 500:'#f97316' },
           }
         }
       }
     }
   </script>
   <style>
-    [x-cloak] { display: none !important; }
-    .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; }
-    .rule-bar { transition: width 0.5s ease; }
-    .fade-in { animation: fadeIn 0.2s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #09090b; color: #e4e4e7; }
+    h1, h2, h3, h4, .display { font-family: 'Syne', sans-serif; }
+    .mono { font-family: 'DM Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+
+    /* Heatmap */
+    .heatmap-cell { width: 11px; height: 11px; border-radius: 2px; }
+
+    /* Rule bar */
+    .rule-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    /* Page entrance */
+    .fade-in { animation: fadeIn 0.22s ease both; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stagger for stat cards */
+    .stat-card:nth-child(1) { animation-delay: 0ms; }
+    .stat-card:nth-child(2) { animation-delay: 60ms; }
+    .stat-card:nth-child(3) { animation-delay: 120ms; }
+    .stat-card:nth-child(4) { animation-delay: 180ms; }
+
+    /* Nav active pill */
+    .nav-btn { position: relative; }
+    .nav-btn.active { color: #bef264; }
+    .nav-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 2px;
+      background: #bef264;
+      border-radius: 1px;
+    }
+
+    /* Input focus glow */
+    .field-input:focus {
+      outline: none;
+      border-color: #a3e635;
+      box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.12);
+    }
+    select.field-input option { background: #18181b; }
+
+    /* Lime button */
+    .btn-lime {
+      background: #bef264;
+      color: #09090b;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-lime:hover { background: #a3e635; }
+    .btn-lime:active { transform: scale(0.98); }
+
+    /* Ghost button */
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #3f3f46;
+      color: #a1a1aa;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: #71717a; color: #e4e4e7; }
+
+    /* Subtle card */
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 14px;
+    }
+    .card-hover:hover { border-color: #3f3f46; }
+
+    /* Badge pill */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 7px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Syne', sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+    /* Modal backdrop */
+    .modal-wrap {
+      position: fixed; inset: 0; z-index: 60;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(6px);
+    }
+    .modal-box {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 18px;
+      width: 100%;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    }
+
+    /* Pulse skeleton */
+    .skel { background: #27272a; border-radius: 8px; animation: pulse 1.4s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Divider rows */
+    .list-row + .list-row { border-top: 1px solid #27272a; }
+
+    /* Lime accent line on section titles */
+    .section-label {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #52525b;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 20px; height: 2px;
+      background: #bef264;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    /* Login page decorative orb */
+    .orb {
+      position: fixed;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(163,230,53,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      top: -120px; right: -120px;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+<body>
 
-<!-- ───────────────────────────── LOGIN ───────────────────────────────── -->
-<div id="view-login" class="min-h-screen flex items-center justify-center p-4">
-  <div class="w-full max-w-sm">
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+<!-- ─────────────────────── LOGIN ─────────────────────────────── -->
+<div id="view-login" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  <div class="orb"></div>
+
+  <div class="w-full max-w-[360px] relative z-10">
+
+    <!-- Logo mark -->
+    <div class="mb-10">
+      <div class="inline-flex items-center gap-3 mb-6">
+        <div class="w-9 h-9 rounded-xl bg-lime-300 flex items-center justify-center">
+          <svg class="w-5 h-5 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <span class="font-display font-800 text-xl text-white tracking-tight">Inglês AI</span>
       </div>
-      <h1 class="text-2xl font-bold text-white">Inglês AI</h1>
-      <p class="text-slate-400 text-sm mt-1">Plataforma de ensino via WhatsApp</p>
+      <h1 class="font-display font-800 text-3xl text-white leading-tight">Bem-vindo<br/>de volta.</h1>
+      <p class="text-zinc-500 text-sm mt-2">Plataforma de ensino via WhatsApp</p>
     </div>
 
-    <!-- ── Formulário de Login ── -->
-    <div id="card-login" class="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
-      <div id="login-error" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+    <!-- Login card -->
+    <div id="card-login" class="card p-6">
+      <div id="login-error" class="hidden mb-4 px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/20 text-red-400 text-xs"></div>
 
       <form id="login-form" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">E-mail</label>
-          <input id="login-email" type="email" required autocomplete="email"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="seu@email.com" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">E-mail</label>
+          <input id="login-email" type="email" required autocomplete="email" placeholder="seu@email.com"
+            class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">Senha</label>
-          <input id="login-password" type="password" required autocomplete="current-password"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="••••••••" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Senha</label>
+          <input id="login-password" type="password" required autocomplete="current-password" placeholder="••••••••"
+            class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
         </div>
         <button type="submit" id="login-btn"
-          class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
+          class="btn-lime w-full py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
           <span>Entrar</span>
         </button>
       </form>
 
-      <p class="text-center text-xs text-slate-500 mt-5">
+      <p class="text-center text-xs text-zinc-600 mt-5">
         É professor?
-        <button onclick="showRegister()" class="text-brand-400 hover:text-brand-300 font-medium transition">Criar conta de professor</button>
+        <button onclick="showRegister()" class="text-lime-400 hover:text-lime-300 font-medium transition">Criar conta</button>
       </p>
     </div>
 
-    <!-- ── Formulário de Cadastro de Professor ── -->
-    <div id="card-register" class="hidden bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800 fade-in">
-      <div class="flex items-center gap-3 mb-5">
-        <button onclick="showLogin()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <!-- Register card -->
+    <div id="card-register" class="hidden card p-6 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <button onclick="showLogin()" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white hover:border-zinc-700 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         </button>
         <div>
-          <h2 class="text-sm font-semibold text-white">Criar conta de professor</h2>
-          <p class="text-xs text-slate-500">Gerencie sua turma pela plataforma</p>
+          <div class="font-display font-700 text-sm text-white">Criar conta de professor</div>
+          <div class="text-xs text-zinc-600">Gerencie sua turma</div>
         </div>
       </div>
 
-      <div id="register-error" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
-      <div id="register-success" class="hidden mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm"></div>
+      <div id="register-error" class="hidden mb-4 px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/20 text-red-400 text-xs"></div>
+      <div id="register-success" class="hidden mb-4 px-3 py-2.5 rounded-lg bg-lime-500/8 border border-lime-500/20 text-lime-400 text-xs"></div>
 
-      <form id="register-form" class="space-y-4" onsubmit="submitRegister(event)">
+      <form id="register-form" class="space-y-3.5" onsubmit="submitRegister(event)">
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">Nome completo</label>
-          <input id="reg-name" type="text" required autocomplete="name" minlength="2"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="Seu nome" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Nome completo</label>
+          <input id="reg-name" type="text" required autocomplete="name" minlength="2" placeholder="Seu nome"
+            class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">E-mail</label>
-          <input id="reg-email" type="email" required autocomplete="email"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="professor@email.com" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">E-mail</label>
+          <input id="reg-email" type="email" required autocomplete="email" placeholder="professor@email.com"
+            class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">Senha</label>
-          <input id="reg-password" type="password" required autocomplete="new-password" minlength="6"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="Mínimo 6 caracteres" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">Confirmar senha</label>
-          <input id="reg-confirm" type="password" required autocomplete="new-password" minlength="6"
-            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-            placeholder="Repita a senha" />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Senha</label>
+            <input id="reg-password" type="password" required autocomplete="new-password" minlength="6" placeholder="min. 6 chars"
+              class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Confirmar</label>
+            <input id="reg-confirm" type="password" required autocomplete="new-password" minlength="6" placeholder="repita"
+              class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition" />
+          </div>
         </div>
         <button type="submit" id="register-btn"
-          class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
+          class="btn-lime w-full py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 mt-1">
           <span>Criar conta</span>
         </button>
       </form>
 
-      <p class="text-center text-xs text-slate-500 mt-5">
+      <p class="text-center text-xs text-zinc-600 mt-5">
         Já tem conta?
-        <button onclick="showLogin()" class="text-brand-400 hover:text-brand-300 font-medium transition">Entrar</button>
+        <button onclick="showLogin()" class="text-lime-400 hover:text-lime-300 font-medium transition">Entrar</button>
       </p>
     </div>
 
   </div>
 </div>
 
-<!-- ──────────────────────── SHELL (após login) ───────────────────────── -->
+<!-- ─────────────────── APP SHELL ──────────────────────────────── -->
 <div id="view-app" class="hidden min-h-screen flex flex-col">
 
-  <!-- Top nav -->
-  <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+  <!-- Nav -->
+  <header class="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-900">
+    <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-lime-300 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-zinc-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
         </div>
-        <span class="font-bold text-white text-sm">Inglês AI</span>
+        <span class="font-display font-700 text-sm text-white tracking-tight">Inglês AI</span>
       </div>
 
       <!-- Student nav -->
-      <div id="nav-student" class="hidden flex gap-1">
-        <button onclick="navigate('dashboard')" data-nav="dashboard" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Dashboard</button>
-        <button onclick="navigate('progress')"  data-nav="progress"  class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Progresso</button>
-        <button onclick="navigate('ranking')"   data-nav="ranking"   class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Ranking</button>
-        <button onclick="navigate('history')"   data-nav="history"   class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Histórico</button>
-      </div>
+      <nav id="nav-student" class="hidden flex gap-0.5">
+        <button onclick="navigate('dashboard')" data-nav="dashboard" class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Dashboard</button>
+        <button onclick="navigate('progress')"  data-nav="progress"  class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Progresso</button>
+        <button onclick="navigate('ranking')"   data-nav="ranking"   class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Ranking</button>
+        <button onclick="navigate('history')"   data-nav="history"   class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Histórico</button>
+      </nav>
 
       <!-- Teacher nav -->
-      <div id="nav-teacher" class="hidden flex gap-1">
-        <button onclick="navigate('t-students')" data-nav="t-students" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Alunos</button>
-        <button onclick="navigate('t-ranking')"  data-nav="t-ranking"  class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Ranking</button>
-        <button onclick="navigate('t-content')"  data-nav="t-content"  class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium transition">Conteúdo</button>
-      </div>
+      <nav id="nav-teacher" class="hidden flex gap-0.5">
+        <button onclick="navigate('t-students')" data-nav="t-students" class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Alunos</button>
+        <button onclick="navigate('t-ranking')"  data-nav="t-ranking"  class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Ranking</button>
+        <button onclick="navigate('t-content')"  data-nav="t-content"  class="nav-btn px-3.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-200 transition rounded-lg">Conteúdo</button>
+      </nav>
 
       <div class="flex items-center gap-3">
-        <span id="nav-username" class="text-slate-400 text-xs hidden sm:block"></span>
-        <button onclick="logout()" class="text-xs text-slate-500 hover:text-red-400 transition">Sair</button>
+        <span id="nav-username" class="text-zinc-600 text-xs hidden sm:block mono"></span>
+        <button onclick="logout()" class="text-xs text-zinc-600 hover:text-red-400 transition">Sair</button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- Page content -->
-  <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
+  <!-- Pages -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-5 py-7">
 
-    <!-- ── STUDENT: Dashboard ── -->
-    <section id="page-dashboard" class="hidden fade-in space-y-5">
-      <h2 class="text-xl font-bold text-white">Dashboard</h2>
+    <!-- ── Dashboard (aluno) ── -->
+    <section id="page-dashboard" class="hidden fade-in">
+      <div class="section-label mb-6">Visão geral</div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="dash-stats"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7" id="dash-stats"></div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <!-- Top erros -->
-        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
-          <h3 class="text-sm font-semibold text-slate-300 mb-4">Top 5 Erros</h3>
-          <div id="dash-errors" class="space-y-2"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card p-5">
+          <div class="section-label mb-4">Top 5 Erros</div>
+          <div id="dash-errors" class="space-y-1"></div>
         </div>
-
-        <!-- Ranking preview -->
-        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
-          <h3 class="text-sm font-semibold text-slate-300 mb-4">Ranking Global — Top 5</h3>
-          <div id="dash-ranking-preview" class="space-y-2"></div>
+        <div class="card p-5">
+          <div class="section-label mb-4">Ranking Global — Top 5</div>
+          <div id="dash-ranking-preview" class="space-y-1"></div>
         </div>
       </div>
     </section>
 
-    <!-- ── STUDENT: Progresso ── -->
-    <section id="page-progress" class="hidden fade-in space-y-5">
-      <h2 class="text-xl font-bold text-white">Progresso por Regra</h2>
+    <!-- ── Progresso (aluno) ── -->
+    <section id="page-progress" class="hidden fade-in">
+      <div class="section-label mb-6">Progresso por regra</div>
 
-      <!-- Heatmap -->
-      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
-        <h3 class="text-sm font-semibold text-slate-300 mb-3">Atividade — últimos 90 dias</h3>
-        <div id="heatmap" class="overflow-x-auto"></div>
-        <div class="flex items-center gap-2 mt-3">
-          <span class="text-xs text-slate-500">Menos</span>
-          <div class="flex gap-1">
-            <div class="heatmap-cell bg-slate-800"></div>
-            <div class="heatmap-cell bg-brand-900/70"></div>
-            <div class="heatmap-cell bg-brand-700/70"></div>
-            <div class="heatmap-cell bg-brand-600"></div>
-            <div class="heatmap-cell bg-brand-400"></div>
+      <div class="card p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-xs font-medium text-zinc-500">Atividade — últimos 90 dias</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-zinc-700">Menos</span>
+            <div class="flex gap-1">
+              <div class="heatmap-cell bg-zinc-800"></div>
+              <div class="heatmap-cell" style="background:rgba(163,230,53,0.18)"></div>
+              <div class="heatmap-cell" style="background:rgba(163,230,53,0.38)"></div>
+              <div class="heatmap-cell" style="background:rgba(163,230,53,0.65)"></div>
+              <div class="heatmap-cell bg-lime-300"></div>
+            </div>
+            <span class="text-xs text-zinc-700">Mais</span>
           </div>
-          <span class="text-xs text-slate-500">Mais</span>
         </div>
+        <div id="heatmap" class="overflow-x-auto"></div>
       </div>
 
-      <!-- Rules -->
-      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800">
-        <h3 class="text-sm font-semibold text-slate-300 mb-4">Regras (1–16)</h3>
-        <div id="rules-list" class="space-y-3"></div>
+      <div class="card p-5">
+        <div class="section-label mb-5">Regras 1–16</div>
+        <div id="rules-list" class="space-y-3.5"></div>
       </div>
     </section>
 
-    <!-- ── STUDENT: Ranking ── -->
-    <section id="page-ranking" class="hidden fade-in space-y-5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-white">Ranking</h2>
-        <div class="flex gap-2 flex-wrap">
-          <button onclick="loadRanking('global')" id="rank-btn-global"
-            class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-brand-600 text-white">Global</button>
-          <button onclick="loadRanking('A1')" class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">A1</button>
-          <button onclick="loadRanking('A2')" class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">A2</button>
-          <button onclick="loadRanking('B1')" class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">B1</button>
-          <button onclick="loadRanking('B2')" class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">B2</button>
-          <button onclick="loadRanking('C1')" class="rank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">C1</button>
+    <!-- ── Ranking (aluno) ── -->
+    <section id="page-ranking" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="section-label">Ranking</div>
+        <div class="flex gap-1.5 flex-wrap">
+          <button onclick="loadRanking('global')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">Global</button>
+          <button onclick="loadRanking('A1')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">A1</button>
+          <button onclick="loadRanking('A2')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">A2</button>
+          <button onclick="loadRanking('B1')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">B1</button>
+          <button onclick="loadRanking('B2')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">B2</button>
+          <button onclick="loadRanking('C1')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">C1</button>
+          <button onclick="loadRanking('C2')" class="rank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">C2</button>
         </div>
       </div>
-      <div id="ranking-table" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"></div>
+      <div id="ranking-table" class="card overflow-hidden"></div>
     </section>
 
-    <!-- ── STUDENT: Histórico ── -->
-    <section id="page-history" class="hidden fade-in space-y-4">
-      <h2 class="text-xl font-bold text-white">Histórico de Sessões</h2>
-      <div id="history-list" class="space-y-3"></div>
+    <!-- ── Histórico (aluno) ── -->
+    <section id="page-history" class="hidden fade-in">
+      <div class="section-label mb-6">Histórico de sessões</div>
+      <div id="history-list" class="space-y-2.5"></div>
     </section>
 
     <!-- ── TEACHER: Alunos ── -->
-    <section id="page-t-students" class="hidden fade-in space-y-5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-white">Minha Turma</h2>
-        <button onclick="openStudentModal()"
-          class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    <section id="page-t-students" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="section-label">Minha Turma</div>
+        <button onclick="openStudentModal()" class="btn-lime px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           Novo Aluno
         </button>
       </div>
-
-      <!-- Search -->
-      <input id="student-search" type="text" placeholder="Buscar aluno..." oninput="filterStudents()"
-        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
-
+      <input id="student-search" type="text" placeholder="Buscar por nome ou e-mail…" oninput="filterStudents()"
+        class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 transition mb-5" />
       <div id="students-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
     </section>
 
-    <!-- ── TEACHER: Ranking da turma ── -->
-    <section id="page-t-ranking" class="hidden fade-in space-y-5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-white">Ranking da Turma</h2>
-        <div class="flex gap-2 flex-wrap">
-          <button onclick="loadTeacherRanking('global')" id="trank-btn-global"
-            class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-brand-600 text-white">Global</button>
-          <button onclick="loadTeacherRanking('A1')" class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">A1</button>
-          <button onclick="loadTeacherRanking('A2')" class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">A2</button>
-          <button onclick="loadTeacherRanking('B1')" class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">B1</button>
-          <button onclick="loadTeacherRanking('B2')" class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">B2</button>
-          <button onclick="loadTeacherRanking('C1')" class="trank-filter-btn text-xs px-3 py-1.5 rounded-lg font-medium transition bg-slate-800 text-slate-300 hover:bg-slate-700">C1</button>
+    <!-- ── TEACHER: Ranking ── -->
+    <section id="page-t-ranking" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="section-label">Ranking da Turma</div>
+        <div class="flex gap-1.5 flex-wrap">
+          <button onclick="loadTeacherRanking('global')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">Global</button>
+          <button onclick="loadTeacherRanking('A1')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">A1</button>
+          <button onclick="loadTeacherRanking('A2')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">A2</button>
+          <button onclick="loadTeacherRanking('B1')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">B1</button>
+          <button onclick="loadTeacherRanking('B2')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">B2</button>
+          <button onclick="loadTeacherRanking('C1')" class="trank-filter-btn badge bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer transition">C1</button>
         </div>
       </div>
-      <div id="t-ranking-table" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"></div>
+      <div id="t-ranking-table" class="card overflow-hidden"></div>
     </section>
 
     <!-- ── TEACHER: Conteúdo ── -->
-    <section id="page-t-content" class="hidden fade-in space-y-5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-white">Biblioteca de Conteúdo</h2>
+    <section id="page-t-content" class="hidden fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="section-label">Biblioteca de Conteúdo</div>
         <div class="flex gap-2 flex-wrap">
           <button onclick="downloadCSVTemplate()"
-            class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            class="btn-ghost px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Template CSV
           </button>
           <button onclick="openImportModal()"
-            class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
+            class="btn-ghost px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 border-emerald-800 text-emerald-400 hover:border-emerald-600 hover:text-emerald-300">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
             Importar CSV
           </button>
-          <button onclick="openContentModal()"
-            class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <button onclick="openContentModal()" class="btn-lime px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             Novo
           </button>
         </div>
       </div>
 
-      <!-- Filtros -->
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2 mb-4">
         <select id="content-filter-level" onchange="filterContent()"
-          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          class="field-input bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-300 transition cursor-pointer">
           <option value="">Todos os níveis</option>
           <option value="A1">A1</option><option value="A2">A2</option>
           <option value="B1">B1</option><option value="B2">B2</option>
           <option value="C1">C1</option><option value="C2">C2</option>
         </select>
         <select id="content-filter-type" onchange="filterContent()"
-          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          class="field-input bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-300 transition cursor-pointer">
           <option value="">Todos os tipos</option>
           <option value="lesson">Lição</option>
           <option value="quiz">Quiz</option>
           <option value="exercise">Exercício</option>
         </select>
         <select id="content-filter-rule" onchange="filterContent()"
-          class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          class="field-input bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-300 transition cursor-pointer">
           <option value="">Todas as regras</option>
           <option value="1">Regra 1</option><option value="2">Regra 2</option>
           <option value="3">Regra 3</option><option value="4">Regra 4</option>
@@ -318,121 +472,109 @@
           <option value="15">Regra 15</option><option value="16">Regra 16</option>
         </select>
       </div>
-
-      <div id="content-list" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden"></div>
+      <div id="content-list" class="card overflow-hidden"></div>
     </section>
 
   </main>
 </div>
 
-<!-- ──────────────── MODAL: Criar/Editar aluno ────────────────────────── -->
-<div id="modal-student" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-md shadow-2xl fade-in">
-    <div class="flex items-center justify-between p-5 border-b border-slate-800">
-      <h3 id="modal-title" class="font-semibold text-white text-sm">Novo Aluno</h3>
-      <button onclick="closeStudentModal()" class="text-slate-500 hover:text-white transition">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+<!-- ─────────────── MODAL: Aluno ────────────────────────────── -->
+<div id="modal-student" class="hidden modal-wrap">
+  <div class="modal-box w-full max-w-md fade-in">
+    <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800">
+      <h3 id="modal-title" class="font-display font-700 text-sm text-white">Novo Aluno</h3>
+      <button onclick="closeStudentModal()" class="text-zinc-600 hover:text-zinc-300 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-
-    <form id="student-form" class="p-5 space-y-4" onsubmit="submitStudentForm(event)">
+    <form id="student-form" class="px-6 py-5 space-y-4" onsubmit="submitStudentForm(event)">
       <input type="hidden" id="modal-student-id" />
-      <div id="modal-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"></div>
-
+      <div id="modal-error" class="hidden px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/20 text-red-400 text-xs"></div>
       <div class="grid grid-cols-2 gap-3">
         <div class="col-span-2">
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Nome completo</label>
-          <input id="modal-name" type="text" required class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+          <label class="block text-xs text-zinc-500 mb-1.5">Nome completo</label>
+          <input id="modal-name" type="text" required class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">E-mail</label>
-          <input id="modal-email" type="email" class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+          <label class="block text-xs text-zinc-500 mb-1.5">E-mail</label>
+          <input id="modal-email" type="email" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Telefone (WhatsApp)</label>
-          <input id="modal-phone" type="text" class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="559293..." />
+          <label class="block text-xs text-zinc-500 mb-1.5">WhatsApp</label>
+          <input id="modal-phone" type="text" placeholder="559293…" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Nível</label>
-          <select id="modal-level" class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <label class="block text-xs text-zinc-500 mb-1.5">Nível</label>
+          <select id="modal-level" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition">
             <option value="A1">A1</option><option value="A2">A2</option>
             <option value="B1" selected>B1</option><option value="B2">B2</option>
             <option value="C1">C1</option><option value="C2">C2</option>
           </select>
         </div>
         <div id="modal-password-wrap">
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Senha</label>
-          <input id="modal-password" type="password" class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" placeholder="mínimo 6 caracteres" />
+          <label class="block text-xs text-zinc-500 mb-1.5">Senha</label>
+          <input id="modal-password" type="password" placeholder="mín. 6 chars" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
       </div>
-
       <div class="flex gap-3 pt-1">
-        <button type="button" onclick="closeStudentModal()"
-          class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
-        <button type="submit" id="modal-submit-btn"
-          class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Salvar</button>
+        <button type="button" onclick="closeStudentModal()" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm">Cancelar</button>
+        <button type="submit" id="modal-submit-btn" class="btn-lime flex-1 py-2.5 rounded-xl text-sm">Salvar</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ──────────────── MODAL: Confirmar exclusão ────────────────────────── -->
-<div id="modal-confirm" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-sm shadow-2xl fade-in p-6 text-center">
-    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-      <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+<!-- ─────────────── MODAL: Confirmar exclusão (aluno) ──────────── -->
+<div id="modal-confirm" class="hidden modal-wrap">
+  <div class="modal-box w-full max-w-sm fade-in p-7 text-center">
+    <div class="w-11 h-11 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
     </div>
-    <h3 class="font-semibold text-white mb-1">Remover aluno?</h3>
-    <p id="confirm-name" class="text-slate-400 text-sm mb-5"></p>
+    <div class="font-display font-700 text-white mb-1">Remover aluno?</div>
+    <p id="confirm-name" class="text-zinc-500 text-sm mb-6"></p>
     <div class="flex gap-3">
-      <button onclick="closeConfirmModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
-      <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Remover</button>
+      <button onclick="closeConfirmModal()" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm">Cancelar</button>
+      <button onclick="confirmDelete()" class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-500 text-white transition">Remover</button>
     </div>
   </div>
 </div>
 
-<!-- ──────────────── MODAL: Criar/Editar conteúdo ────────────────────────── -->
-<div id="modal-content" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-lg shadow-2xl fade-in">
-    <div class="flex items-center justify-between p-5 border-b border-slate-800">
-      <h3 id="modal-content-title" class="font-semibold text-white text-sm">Novo Conteúdo</h3>
-      <button onclick="closeContentModal()" class="text-slate-500 hover:text-white transition">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+<!-- ─────────────── MODAL: Criar/Editar conteúdo ──────────────── -->
+<div id="modal-content" class="hidden modal-wrap">
+  <div class="modal-box w-full max-w-lg fade-in">
+    <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800">
+      <h3 id="modal-content-title" class="font-display font-700 text-sm text-white">Novo Conteúdo</h3>
+      <button onclick="closeContentModal()" class="text-zinc-600 hover:text-zinc-300 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-
-    <form id="content-form" class="p-5 space-y-4" onsubmit="submitContentForm(event)">
+    <form id="content-form" class="px-6 py-5 space-y-4" onsubmit="submitContentForm(event)">
       <input type="hidden" id="modal-content-id" />
-      <div id="modal-content-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"></div>
-
+      <div id="modal-content-error" class="hidden px-3 py-2.5 rounded-lg bg-red-500/8 border border-red-500/20 text-red-400 text-xs"></div>
       <div class="grid grid-cols-2 gap-3">
         <div class="col-span-2">
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Título</label>
-          <input id="modal-content-titleval" type="text" required
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+          <label class="block text-xs text-zinc-500 mb-1.5">Título</label>
+          <input id="modal-content-titleval" type="text" required class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Tipo</label>
-          <select id="modal-content-type"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <label class="block text-xs text-zinc-500 mb-1.5">Tipo</label>
+          <select id="modal-content-type" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition">
             <option value="lesson">Lição</option>
             <option value="quiz">Quiz</option>
             <option value="exercise">Exercício</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Nível</label>
-          <select id="modal-content-level"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <label class="block text-xs text-zinc-500 mb-1.5">Nível</label>
+          <select id="modal-content-level" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition">
             <option value="A1">A1</option><option value="A2">A2</option>
             <option value="B1" selected>B1</option><option value="B2">B2</option>
             <option value="C1">C1</option><option value="C2">C2</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Regra (1–16)</label>
-          <select id="modal-content-rule"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <label class="block text-xs text-zinc-500 mb-1.5">Regra (1–16)</label>
+          <select id="modal-content-rule" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition">
             <option value="1">Regra 1</option><option value="2">Regra 2</option>
             <option value="3">Regra 3</option><option value="4">Regra 4</option>
             <option value="5">Regra 5</option><option value="6">Regra 6</option>
@@ -444,108 +586,94 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Pontos</label>
-          <input id="modal-content-points" type="number" min="0" value="10"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+          <label class="block text-xs text-zinc-500 mb-1.5">Pontos</label>
+          <input id="modal-content-points" type="number" min="0" value="10" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Ordem</label>
-          <input id="modal-content-order" type="number" min="0" value="0"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition" />
+          <label class="block text-xs text-zinc-500 mb-1.5">Ordem</label>
+          <input id="modal-content-order" type="number" min="0" value="0" class="field-input w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white transition" />
         </div>
         <div class="col-span-2">
-          <label class="block text-xs font-medium text-slate-400 mb-1.5">Body <span class="text-slate-600">(JSON opcional)</span></label>
+          <label class="block text-xs text-zinc-500 mb-1.5">Body <span class="text-zinc-700">(JSON opcional)</span></label>
           <textarea id="modal-content-body" rows="4" placeholder="{}"
-            class="modal-input w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 transition resize-none"></textarea>
+            class="field-input mono w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 transition resize-none"></textarea>
         </div>
       </div>
-
       <div class="flex gap-3 pt-1">
-        <button type="button" onclick="closeContentModal()"
-          class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
-        <button type="submit" id="modal-content-submit-btn"
-          class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Salvar</button>
+        <button type="button" onclick="closeContentModal()" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm">Cancelar</button>
+        <button type="submit" id="modal-content-submit-btn" class="btn-lime flex-1 py-2.5 rounded-xl text-sm">Salvar</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ──────────────── MODAL: Confirmar exclusão de conteúdo ────────────────── -->
-<div id="modal-confirm-content" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-sm shadow-2xl fade-in p-6 text-center">
-    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-      <svg class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+<!-- ─────────────── MODAL: Confirmar exclusão (conteúdo) ──────── -->
+<div id="modal-confirm-content" class="hidden modal-wrap">
+  <div class="modal-box w-full max-w-sm fade-in p-7 text-center">
+    <div class="w-11 h-11 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
     </div>
-    <h3 class="font-semibold text-white mb-1">Remover conteúdo?</h3>
-    <p id="confirm-content-name" class="text-slate-400 text-sm mb-5"></p>
+    <div class="font-display font-700 text-white mb-1">Remover conteúdo?</div>
+    <p id="confirm-content-name" class="text-zinc-500 text-sm mb-6"></p>
     <div class="flex gap-3">
-      <button onclick="closeConfirmContentModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Cancelar</button>
-      <button onclick="confirmDeleteContent()" class="flex-1 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl transition">Remover</button>
+      <button onclick="closeConfirmContentModal()" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm">Cancelar</button>
+      <button onclick="confirmDeleteContent()" class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-500 text-white transition">Remover</button>
     </div>
   </div>
 </div>
 
-<!-- ──────────────── MODAL: Importar CSV de conteúdo ─────────────────── -->
-<div id="modal-import-csv" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-  <div class="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-lg shadow-2xl fade-in">
-    <div class="flex items-center justify-between p-5 border-b border-slate-800">
+<!-- ─────────────── MODAL: Importar CSV ───────────────────────── -->
+<div id="modal-import-csv" class="hidden modal-wrap">
+  <div class="modal-box w-full max-w-lg fade-in">
+    <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800">
       <div>
-        <h3 class="font-semibold text-white text-sm">Importar conteúdo via CSV</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Adicione múltiplos conteúdos de uma vez</p>
+        <div class="font-display font-700 text-sm text-white">Importar via CSV</div>
+        <div class="text-xs text-zinc-600 mt-0.5">Adicione múltiplos conteúdos de uma vez</div>
       </div>
-      <button onclick="closeImportModal()" class="text-slate-500 hover:text-white transition">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      <button onclick="closeImportModal()" class="text-zinc-600 hover:text-zinc-300 transition">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-
-    <div class="p-5 space-y-4">
-      <!-- Estado: aguardando arquivo -->
+    <div class="px-6 py-5 space-y-4">
       <div id="import-idle">
         <label id="import-dropzone"
-          class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:border-brand-500 hover:bg-brand-500/5 transition group">
-          <svg class="w-8 h-8 text-slate-600 group-hover:text-brand-400 transition mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-zinc-800 rounded-2xl cursor-pointer hover:border-lime-400/40 hover:bg-lime-400/3 transition group">
+          <svg class="w-7 h-7 text-zinc-700 group-hover:text-lime-400 transition mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
-          <span id="import-filename" class="text-sm text-slate-500 group-hover:text-slate-300 transition">Clique ou arraste um arquivo .csv</span>
-          <span class="text-xs text-slate-600 mt-1">Máx. 5 MB</span>
+          <span id="import-filename" class="text-sm text-zinc-600 group-hover:text-zinc-300 transition">Clique ou arraste um .csv</span>
+          <span class="text-xs text-zinc-700 mt-1">Máx. 5 MB</span>
           <input id="import-file-input" type="file" accept=".csv" class="hidden" onchange="onImportFileChange(event)" />
         </label>
-
-        <div class="mt-4 p-3 rounded-xl bg-slate-800/60 text-xs text-slate-500 space-y-1">
-          <p class="font-semibold text-slate-400">Colunas obrigatórias:</p>
-          <p><span class="text-brand-400 font-mono">title</span>, <span class="text-brand-400 font-mono">type</span> (lesson|quiz|exercise), <span class="text-brand-400 font-mono">level</span> (A1–C2), <span class="text-brand-400 font-mono">rule_number</span> (1–16)</p>
-          <p class="font-semibold text-slate-400 pt-1">Colunas opcionais:</p>
-          <p><span class="text-slate-400 font-mono">points_reward</span> (padrão 10), <span class="text-slate-400 font-mono">order_index</span> (padrão 0), <span class="text-slate-400 font-mono">body</span> (JSON)</p>
+        <div class="mt-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-600 space-y-1">
+          <p><span class="text-zinc-400 font-medium">Obrigatórias:</span> <span class="mono text-lime-400/80">title</span>, <span class="mono text-lime-400/80">type</span>, <span class="mono text-lime-400/80">level</span>, <span class="mono text-lime-400/80">rule_number</span></p>
+          <p><span class="text-zinc-500 font-medium">Opcionais:</span> <span class="mono">points_reward</span>, <span class="mono">order_index</span>, <span class="mono">body</span></p>
         </div>
       </div>
-
-      <!-- Estado: resultado da importação -->
       <div id="import-result" class="hidden space-y-3">
         <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-            <div id="result-imported" class="text-2xl font-black text-emerald-400">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Importados</div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+            <div id="result-imported" class="mono text-2xl font-medium text-lime-400">0</div>
+            <div class="text-xs text-zinc-600 mt-0.5">Importados</div>
           </div>
-          <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-            <div id="result-skipped" class="text-2xl font-black text-amber-400">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Linhas inválidas</div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+            <div id="result-skipped" class="mono text-2xl font-medium text-amber-400">0</div>
+            <div class="text-xs text-zinc-600 mt-0.5">Inválidos</div>
           </div>
-          <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-            <div id="result-failed" class="text-2xl font-black text-red-400">0</div>
-            <div class="text-xs text-slate-500 mt-0.5">Falhas</div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+            <div id="result-failed" class="mono text-2xl font-medium text-red-400">0</div>
+            <div class="text-xs text-zinc-600 mt-0.5">Falhas</div>
           </div>
         </div>
         <div id="result-errors-wrap" class="hidden">
-          <p class="text-xs font-semibold text-slate-400 mb-1.5">Detalhes dos problemas:</p>
-          <div id="result-errors" class="max-h-36 overflow-y-auto space-y-1 text-xs text-red-400 bg-slate-800/60 rounded-xl p-3 font-mono"></div>
+          <p class="text-xs font-medium text-zinc-500 mb-1.5">Detalhes:</p>
+          <div id="result-errors" class="max-h-32 overflow-y-auto space-y-1 text-xs text-red-400 bg-zinc-900 border border-zinc-800 rounded-xl p-3 mono"></div>
         </div>
       </div>
-
       <div class="flex gap-3 pt-1">
-        <button type="button" onclick="closeImportModal()"
-          class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition">Fechar</button>
-        <button id="import-submit-btn" type="button" onclick="submitImportCSV()"
-          class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        <button onclick="closeImportModal()" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm">Fechar</button>
+        <button id="import-submit-btn" onclick="submitImportCSV()"
+          class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-emerald-700 hover:bg-emerald-600 text-white transition disabled:opacity-30 disabled:cursor-not-allowed" disabled>
           Importar
         </button>
       </div>
@@ -553,18 +681,16 @@
   </div>
 </div>
 
-<!-- ───────────────────────────── JS ─────────────────────────────────── -->
+<!-- ─────────────── JS ─────────────────────────────────────────── -->
 <script>
-// ── Config ────────────────────────────────────────────────────────────
 const API = (window.API_URL || 'http://localhost:3334')
 
-// ── State ─────────────────────────────────────────────────────────────
 let currentUser = null
 let currentPage = null
 let allStudents = []
 let deleteTargetId = null
 
-// ── API client ────────────────────────────────────────────────────────
+// ── API client ─────────────────────────────────────────────────
 async function api(method, path, body) {
   const token = localStorage.getItem('token')
   const opts = {
@@ -578,11 +704,11 @@ async function api(method, path, body) {
   return data
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────
+// ── Auth ───────────────────────────────────────────────────────
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault()
-  const btn  = document.getElementById('login-btn')
-  const err  = document.getElementById('login-error')
+  const btn = document.getElementById('login-btn')
+  const err = document.getElementById('login-error')
   err.classList.add('hidden')
   btn.disabled = true
   btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>'
@@ -610,7 +736,6 @@ function logout() {
   hide('view-app')
 }
 
-// ── Toggle login / register ───────────────────────────────────────────
 function showRegister() {
   hide('card-login')
   show('card-register')
@@ -665,7 +790,7 @@ async function submitRegister(e) {
   }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────
+// ── Init ───────────────────────────────────────────────────────
 async function boot() {
   const token = localStorage.getItem('token')
   if (!token) return show('view-login')
@@ -673,9 +798,7 @@ async function boot() {
     const user = await api('GET', '/auth/me')
     currentUser = user
     initApp()
-  } catch {
-    logout()
-  }
+  } catch { logout() }
 }
 
 function initApp() {
@@ -688,7 +811,7 @@ function initApp() {
   navigate(isTeacher ? 't-students' : 'dashboard')
 }
 
-// ── Router ────────────────────────────────────────────────────────────
+// ── Router ─────────────────────────────────────────────────────
 function navigate(page) {
   if (currentPage === page) return
   currentPage = page
@@ -698,18 +821,16 @@ function navigate(page) {
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
     const active = btn.dataset.nav === page
-    btn.classList.toggle('bg-slate-800', active)
-    btn.classList.toggle('text-white', active)
-    btn.classList.toggle('text-slate-400', !active)
-    btn.classList.toggle('hover:bg-slate-800', !active)
-    btn.classList.toggle('hover:text-white', !active)
+    btn.classList.toggle('active', active)
+    btn.classList.toggle('text-zinc-200', active)
+    btn.classList.toggle('text-zinc-500', !active)
   })
 
   const loaders = {
-    dashboard: loadDashboard,
-    progress:  loadProgress,
-    ranking:   () => loadRanking('global'),
-    history:   loadHistory,
+    dashboard:    loadDashboard,
+    progress:     loadProgress,
+    ranking:      () => loadRanking('global'),
+    history:      loadHistory,
     't-students': loadStudents,
     't-ranking':  () => loadTeacherRanking('global'),
     't-content':  loadContent,
@@ -717,24 +838,31 @@ function navigate(page) {
   loaders[page]?.()
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────
 function show(id) { document.getElementById(id)?.classList.remove('hidden') }
 function hide(id) { document.getElementById(id)?.classList.add('hidden') }
 
 function levelBadge(lvl) {
-  const colors = { A1:'bg-emerald-500/15 text-emerald-400', A2:'bg-teal-500/15 text-teal-400', B1:'bg-brand-500/15 text-brand-400', B2:'bg-violet-500/15 text-violet-400', C1:'bg-amber-500/15 text-amber-400', C2:'bg-red-500/15 text-red-400' }
-  return `<span class="inline-block px-2 py-0.5 rounded-md text-xs font-semibold ${colors[lvl] || 'bg-slate-700 text-slate-300'}">${lvl}</span>`
+  const c = {
+    A1: 'bg-emerald-500/12 text-emerald-400 border border-emerald-500/20',
+    A2: 'bg-teal-500/12 text-teal-400 border border-teal-500/20',
+    B1: 'bg-sky-500/12 text-sky-400 border border-sky-500/20',
+    B2: 'bg-violet-500/12 text-violet-400 border border-violet-500/20',
+    C1: 'bg-amber-500/12 text-amber-400 border border-amber-500/20',
+    C2: 'bg-rose-500/12 text-rose-400 border border-rose-500/20',
+  }
+  return `<span class="badge ${c[lvl] || 'bg-zinc-800 text-zinc-400'}">${lvl}</span>`
 }
 
 function medal(pos) {
-  if (pos === 1) return '🥇'
-  if (pos === 2) return '🥈'
-  if (pos === 3) return '🥉'
-  return `<span class="text-slate-500 font-bold">#${pos}</span>`
+  if (pos === 1) return '<span class="text-amber-400 font-display font-800">1</span>'
+  if (pos === 2) return '<span class="text-zinc-400 font-display font-800">2</span>'
+  if (pos === 3) return '<span class="text-amber-600 font-display font-800">3</span>'
+  return `<span class="text-zinc-600 mono text-xs">#${pos}</span>`
 }
 
 function modalityLabel(m) {
-  return { conversation:'Conversação', writing:'Escrita', listening:'Escuta' }[m] || m
+  return { conversation: 'Conversação', writing: 'Escrita', listening: 'Escuta' }[m] || m
 }
 
 function relativeTime(iso) {
@@ -743,18 +871,16 @@ function relativeTime(iso) {
   if (mins < 60) return `${mins}min atrás`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h atrás`
-  return `${Math.floor(hrs/24)}d atrás`
+  return `${Math.floor(hrs / 24)}d atrás`
 }
 
-function skeleton(rows = 4) {
-  return Array.from({ length: rows }, () =>
-    `<div class="h-10 bg-slate-800 rounded-xl animate-pulse"></div>`
-  ).join('')
+function skeleton(rows = 4, h = 'h-10') {
+  return Array.from({ length: rows }, () => `<div class="skel ${h}"></div>`).join('')
 }
 
-// ── Dashboard (student) ───────────────────────────────────────────────
+// ── Dashboard (aluno) ──────────────────────────────────────────
 async function loadDashboard() {
-  document.getElementById('dash-stats').innerHTML = skeleton(4).replace(/h-10/g, 'h-20')
+  document.getElementById('dash-stats').innerHTML = skeleton(4, 'h-24')
   document.getElementById('dash-errors').innerHTML = skeleton(3)
   document.getElementById('dash-ranking-preview').innerHTML = skeleton(3)
 
@@ -769,68 +895,53 @@ async function loadDashboard() {
   const totalContent   = progress_by_rule.reduce((s, r) => s + Number(r.total_content), 0)
   const doneContent    = progress_by_rule.reduce((s, r) => s + Number(r.completed), 0)
 
-  document.getElementById('dash-stats').innerHTML = `
-    <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
-      <div class="text-3xl font-black text-brand-400">${student.current_streak}</div>
-      <div class="text-xs text-slate-500 mt-1">Streak atual</div>
-      <div class="text-xs text-slate-600 mt-0.5">Recorde: ${student.longest_streak}</div>
+  document.getElementById('dash-stats').innerHTML = [
+    { val: student.current_streak, label: 'Streak atual', sub: `Recorde: ${student.longest_streak}`, color: 'text-lime-400' },
+    { val: student.total_points.toLocaleString(), label: 'Pontos totais', sub: student.ranking_position ? `#${student.ranking_position} no ranking` : '—', color: 'text-amber-400' },
+    { val: doneContent, label: 'Conteúdos', sub: `de ${totalContent}`, color: 'text-sky-400' },
+    { val: rulesCompleted, label: 'Regras ativas', sub: 'de 16', color: 'text-violet-400' },
+  ].map(s => `
+    <div class="card card-hover stat-card fade-in p-5">
+      <div class="mono text-3xl font-medium ${s.color} mb-1">${s.val}</div>
+      <div class="text-xs text-zinc-500">${s.label}</div>
+      <div class="text-xs text-zinc-700 mt-0.5">${s.sub}</div>
     </div>
-    <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
-      <div class="text-3xl font-black text-amber-400">${student.total_points.toLocaleString()}</div>
-      <div class="text-xs text-slate-500 mt-1">Pontos totais</div>
-      <div class="text-xs text-slate-600 mt-0.5">${student.ranking_position ? `#${student.ranking_position} no ranking` : '—'}</div>
-    </div>
-    <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
-      <div class="text-3xl font-black text-emerald-400">${doneContent}</div>
-      <div class="text-xs text-slate-500 mt-1">Conteúdos completos</div>
-      <div class="text-xs text-slate-600 mt-0.5">de ${totalContent} no total</div>
-    </div>
-    <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
-      <div class="text-3xl font-black text-violet-400">${rulesCompleted}</div>
-      <div class="text-xs text-slate-500 mt-1">Regras iniciadas</div>
-      <div class="text-xs text-slate-600 mt-0.5">de 16 regras</div>
-    </div>
-  `
+  `).join('')
 
-  if (top_errors.length) {
-    document.getElementById('dash-errors').innerHTML = top_errors.map(e => `
-      <div class="flex items-center gap-3 py-2 border-b border-slate-800 last:border-0">
+  document.getElementById('dash-errors').innerHTML = top_errors.length
+    ? top_errors.map(e => `
+      <div class="flex items-center gap-3 py-2.5 list-row">
         <div class="flex-1 min-w-0">
-          <div class="text-sm text-slate-200 truncate">${e.content_title || 'Conversação livre'}</div>
-          <div class="text-xs text-slate-500">${e.session_count} sessões</div>
+          <div class="text-sm text-zinc-200 truncate">${e.content_title || 'Conversação livre'}</div>
+          <div class="text-xs text-zinc-600 mt-0.5">${e.session_count} sessões</div>
         </div>
-        <div class="text-red-400 font-bold text-sm">${e.total_errors} erros</div>
+        <div class="mono text-red-400 text-sm font-medium">${e.total_errors}</div>
       </div>
     `).join('')
-  } else {
-    document.getElementById('dash-errors').innerHTML = `<p class="text-slate-500 text-sm text-center py-4">Nenhum erro registrado ainda 🎉</p>`
-  }
+    : `<p class="text-zinc-600 text-sm py-4">Nenhum erro ainda 🎉</p>`
 
   const top5 = rankData.ranking.slice(0, 5)
   document.getElementById('dash-ranking-preview').innerHTML = top5.length
     ? top5.map(r => `
-      <div class="flex items-center gap-3 py-2 border-b border-slate-800 last:border-0">
-        <div class="w-8 text-center text-sm">${medal(r.position)}</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm text-slate-200 truncate">${r.name}</div>
-        </div>
+      <div class="flex items-center gap-3 py-2.5 list-row">
+        <div class="w-6 text-center text-sm flex-shrink-0">${medal(r.position)}</div>
+        <div class="flex-1 min-w-0 text-sm text-zinc-200 truncate">${r.name}</div>
         ${levelBadge(r.level)}
-        <div class="text-amber-400 font-bold text-sm">${r.points.toLocaleString()}</div>
+        <div class="mono text-amber-400 text-sm">${Number(r.points).toLocaleString()}</div>
       </div>
     `).join('')
-    : `<p class="text-slate-500 text-sm text-center py-4">Nenhum aluno no ranking ainda.</p>`
+    : `<p class="text-zinc-600 text-sm py-4">Nenhum aluno ainda.</p>`
 }
 
-// ── Progresso (student) ───────────────────────────────────────────────
+// ── Progresso (aluno) ──────────────────────────────────────────
 async function loadProgress() {
-  document.getElementById('rules-list').innerHTML = skeleton(8).replace(/h-10/g, 'h-12')
-  document.getElementById('heatmap').innerHTML = `<div class="h-14 bg-slate-800 rounded-xl animate-pulse w-full"></div>`
+  document.getElementById('rules-list').innerHTML = skeleton(8, 'h-10')
+  document.getElementById('heatmap').innerHTML = `<div class="skel h-14 w-full"></div>`
 
   const [dash, streakData] = await Promise.all([
     api('GET', '/dashboard/me'),
     api('GET', '/streak/me'),
   ])
-
   renderHeatmap(streakData.history)
   renderRules(dash.progress_by_rule)
 }
@@ -849,63 +960,65 @@ function renderHeatmap(history) {
     d.setDate(d.getDate() - i)
     const key = d.toISOString().slice(0, 10)
     const count = dateMap[key] || 0
-    let bg = 'bg-slate-800'
-    if (count >= 4) bg = 'bg-brand-400'
-    else if (count >= 3) bg = 'bg-brand-600'
-    else if (count >= 2) bg = 'bg-brand-700/70'
-    else if (count >= 1) bg = 'bg-brand-900/70'
+    let bg = 'bg-zinc-800'
+    if (count >= 4)      bg = 'bg-lime-300'
+    else if (count >= 3) bg = 'bg-lime-400/65'
+    else if (count >= 2) bg = 'bg-lime-400/38'
+    else if (count >= 1) bg = 'bg-lime-400/18'
     cells.push(`<div class="heatmap-cell ${bg}" title="${key}: ${count} sessão(ões)"></div>`)
   }
 
   const weeks = []
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
-
   document.getElementById('heatmap').innerHTML = `
     <div class="flex gap-1">
       ${weeks.map(w => `<div class="flex flex-col gap-1">${w.join('')}</div>`).join('')}
-    </div>
-  `
+    </div>`
 }
 
 function renderRules(rules) {
   if (!rules.length) {
-    document.getElementById('rules-list').innerHTML = `<p class="text-slate-500 text-sm">Nenhum conteúdo cadastrado ainda.</p>`
+    document.getElementById('rules-list').innerHTML = `<p class="text-zinc-600 text-sm">Nenhum conteúdo cadastrado ainda.</p>`
     return
   }
   document.getElementById('rules-list').innerHTML = rules.map(r => {
-    const total    = Number(r.total_content)
-    const done     = Number(r.completed)
-    const pct      = total > 0 ? Math.round((done / total) * 100) : 0
-    const barColor = pct === 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-brand-500' : 'bg-slate-700'
+    const total = Number(r.total_content)
+    const done  = Number(r.completed)
+    const pct   = total > 0 ? Math.round((done / total) * 100) : 0
+    const bar   = pct === 100 ? 'bg-lime-400' : pct > 0 ? 'bg-lime-400/50' : 'bg-zinc-800'
     return `
       <div>
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-sm text-slate-300">Regra ${r.rule_number}</span>
-          <div class="flex items-center gap-3 text-xs text-slate-500">
-            <span>${done}/${total} completos</span>
-            <span class="font-semibold ${pct === 100 ? 'text-emerald-400' : 'text-slate-400'}">${pct}%</span>
+          <span class="text-sm text-zinc-300">Regra ${r.rule_number}</span>
+          <div class="flex items-center gap-3 text-xs">
+            <span class="text-zinc-600">${done}/${total}</span>
+            <span class="mono font-medium ${pct === 100 ? 'text-lime-400' : 'text-zinc-500'}">${pct}%</span>
           </div>
         </div>
-        <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div class="h-full ${barColor} rule-bar rounded-full" style="width:${pct}%"></div>
+        <div class="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+          <div class="h-full ${bar} rule-bar rounded-full" style="width:${pct}%"></div>
         </div>
-      </div>
-    `
+      </div>`
   }).join('')
 }
 
-// ── Ranking (student) ─────────────────────────────────────────────────
+// ── Ranking (aluno) ────────────────────────────────────────────
 async function loadRanking(filter) {
   document.querySelectorAll('.rank-filter-btn').forEach(btn => {
     const active = btn.textContent.trim() === (filter === 'global' ? 'Global' : filter)
-    btn.classList.toggle('bg-brand-600', active)
-    btn.classList.toggle('text-white', active)
-    btn.classList.toggle('bg-slate-800', !active)
-    btn.classList.toggle('text-slate-300', !active)
+    btn.classList.toggle('bg-lime-300', active)
+    btn.classList.toggle('text-zinc-950', active)
+    btn.classList.toggle('bg-zinc-800', !active)
+    btn.classList.toggle('text-zinc-400', !active)
+    btn.classList.toggle('text-zinc-950', false)
+  })
+  // Fix: ensure active gets correct text color
+  document.querySelectorAll('.rank-filter-btn').forEach(btn => {
+    const active = btn.textContent.trim() === (filter === 'global' ? 'Global' : filter)
+    if (active) { btn.classList.add('text-zinc-950'); btn.classList.remove('text-zinc-400') }
   })
 
   document.getElementById('ranking-table').innerHTML = `<div class="p-4 space-y-2">${skeleton(10)}</div>`
-
   const path = filter === 'global' ? '/ranking/global' : `/ranking/level/${filter}`
   const { ranking } = await api('GET', path)
   renderRankingTable('ranking-table', ranking)
@@ -913,75 +1026,65 @@ async function loadRanking(filter) {
 
 function renderRankingTable(containerId, ranking) {
   if (!ranking.length) {
-    document.getElementById(containerId).innerHTML = `<p class="text-slate-500 text-sm text-center p-8">Nenhum aluno no ranking ainda.</p>`
+    document.getElementById(containerId).innerHTML = `<p class="text-zinc-600 text-sm text-center p-8">Nenhum aluno no ranking ainda.</p>`
     return
   }
   document.getElementById(containerId).innerHTML = `
-    <div class="divide-y divide-slate-800">
+    <div>
       ${ranking.map(r => `
-        <div class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-800/50 transition">
-          <div class="w-10 text-center text-lg flex-shrink-0">${medal(r.position)}</div>
+        <div class="list-row flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-900/60 transition">
+          <div class="w-8 text-center flex-shrink-0">${medal(r.position)}</div>
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-white truncate">${r.name}</div>
-            <div class="text-xs text-slate-500 mt-0.5">🔥 ${r.current_streak} dias</div>
+            <div class="text-sm text-zinc-100 truncate">${r.name}</div>
+            <div class="text-xs text-zinc-600 mt-0.5">🔥 ${r.current_streak} dias</div>
           </div>
           ${levelBadge(r.level)}
           <div class="text-right flex-shrink-0">
-            <div class="text-amber-400 font-bold text-sm">${Number(r.points).toLocaleString()}</div>
-            <div class="text-xs text-slate-600">pontos</div>
+            <div class="mono text-amber-400 text-sm">${Number(r.points).toLocaleString()}</div>
+            <div class="text-xs text-zinc-700">pts</div>
           </div>
         </div>
       `).join('')}
-    </div>
-  `
+    </div>`
 }
 
-// ── Histórico (student) ───────────────────────────────────────────────
+// ── Histórico (aluno) ──────────────────────────────────────────
 async function loadHistory() {
-  document.getElementById('history-list').innerHTML = `<div class="space-y-3">${skeleton(6).replace(/h-10/g, 'h-16')}</div>`
-
+  document.getElementById('history-list').innerHTML = `<div class="space-y-2.5">${skeleton(6, 'h-16')}</div>`
   const sessions = await api('GET', '/sessions/me')
-
   if (!sessions.length) {
-    document.getElementById('history-list').innerHTML = `<p class="text-slate-500 text-sm text-center py-8">Nenhuma sessão registrada ainda.</p>`
+    document.getElementById('history-list').innerHTML = `<p class="text-zinc-600 text-sm text-center py-8">Nenhuma sessão registrada ainda.</p>`
     return
   }
-
   document.getElementById('history-list').innerHTML = sessions.map(s => {
-    const accuracy = (s.correct + s.wrong) > 0
-      ? Math.round((s.correct / (s.correct + s.wrong)) * 100) : 0
-    const accColor = accuracy >= 80 ? 'text-emerald-400' : accuracy >= 60 ? 'text-amber-400' : 'text-red-400'
-
+    const accuracy = (s.correct + s.wrong) > 0 ? Math.round((s.correct / (s.correct + s.wrong)) * 100) : 0
+    const accColor = accuracy >= 80 ? 'text-lime-400' : accuracy >= 60 ? 'text-amber-400' : 'text-red-400'
     return `
-      <div class="bg-slate-900 rounded-xl border border-slate-800 p-4 flex items-center gap-4">
-        <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0 text-lg">
-          ${{ conversation:'💬', writing:'✍️', listening:'🎧' }[s.modality] || '📚'}
+      <div class="card card-hover p-4 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0 text-lg">
+          ${{ conversation: '💬', writing: '✍️', listening: '🎧' }[s.modality] || '📚'}
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-white truncate">${s.content_title || 'Sessão livre'}</div>
-          <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+          <div class="text-sm text-zinc-100 truncate">${s.content_title || 'Sessão livre'}</div>
+          <div class="flex items-center gap-2 text-xs text-zinc-600 mt-0.5">
             <span>${modalityLabel(s.modality)}</span>
-            <span>·</span>
-            <span>${s.duration_min}min</span>
-            <span>·</span>
-            <span>${relativeTime(s.created_at)}</span>
+            <span>·</span><span>${s.duration_min}min</span>
+            <span>·</span><span>${relativeTime(s.created_at)}</span>
           </div>
         </div>
         <div class="text-right flex-shrink-0">
-          <div class="${accColor} font-bold text-sm">${accuracy}%</div>
-          <div class="text-xs text-slate-600">${s.correct}✓ ${s.wrong}✗</div>
+          <div class="mono ${accColor} text-sm font-medium">${accuracy}%</div>
+          <div class="text-xs text-zinc-700">${s.correct}✓ ${s.wrong}✗</div>
         </div>
-      </div>
-    `
+      </div>`
   }).join('')
 }
 
-// ── Teacher: Students list ────────────────────────────────────────────
+// ── Teacher: Students ──────────────────────────────────────────
 async function loadStudents() {
   document.getElementById('students-grid').innerHTML = Array.from({ length: 6 }, () =>
-    `<div class="h-32 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse"></div>`
+    `<div class="skel h-36 rounded-xl"></div>`
   ).join('')
-
   const students = await api('GET', '/students')
   allStudents = students
   renderStudentsGrid(students)
@@ -990,37 +1093,36 @@ async function loadStudents() {
 function renderStudentsGrid(students) {
   if (!students.length) {
     document.getElementById('students-grid').innerHTML = `
-      <div class="col-span-3 text-center py-12">
-        <div class="text-4xl mb-3">👋</div>
-        <p class="text-slate-400 text-sm">Nenhum aluno cadastrado ainda.</p>
-        <p class="text-slate-600 text-xs mt-1">Clique em "Novo Aluno" para começar.</p>
+      <div class="col-span-3 text-center py-14">
+        <div class="text-3xl mb-3">👋</div>
+        <p class="text-zinc-500 text-sm">Nenhum aluno cadastrado ainda.</p>
+        <p class="text-zinc-700 text-xs mt-1">Clique em "Novo Aluno" para começar.</p>
       </div>`
     return
   }
-
   document.getElementById('students-grid').innerHTML = students.map(s => `
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 hover:border-slate-700 transition group">
+    <div class="card card-hover p-4 group transition">
       <div class="flex items-start justify-between mb-3">
-        <div class="w-9 h-9 rounded-xl bg-brand-600/20 flex items-center justify-center text-brand-400 font-bold text-sm">
+        <div class="w-9 h-9 rounded-xl bg-lime-400/10 border border-lime-400/20 flex items-center justify-center text-lime-400 font-display font-700 text-sm">
           ${s.name.charAt(0).toUpperCase()}
         </div>
         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-          <button onclick="openStudentModal('${s.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          <button onclick="openStudentModal('${s.id}')" class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-100 hover:border-zinc-700 transition">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
           </button>
-          <button onclick="openConfirmModal('${s.id}', '${s.name.replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-400 transition">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          <button onclick="openConfirmModal('${s.id}', '${s.name.replace(/'/g, "\\'")}')" class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-red-400 hover:border-red-900 transition">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
       </div>
-      <div class="font-medium text-white text-sm truncate mb-1">${s.name}</div>
+      <div class="font-medium text-zinc-100 text-sm truncate mb-1">${s.name}</div>
       <div class="flex items-center gap-1.5 mb-3">
         ${levelBadge(s.level)}
-        <span class="text-xs text-slate-600 truncate">${s.phone || ''}</span>
+        <span class="text-xs text-zinc-700 truncate">${s.phone || ''}</span>
       </div>
       <div class="flex items-center justify-between text-xs">
-        <span class="text-amber-400 font-semibold">${Number(s.total_points).toLocaleString()} pts</span>
-        <span class="text-slate-500">🔥 ${s.current_streak}d</span>
+        <span class="mono text-amber-400">${Number(s.total_points).toLocaleString()} pts</span>
+        <span class="text-zinc-600">🔥 ${s.current_streak}d</span>
       </div>
     </div>
   `).join('')
@@ -1028,12 +1130,14 @@ function renderStudentsGrid(students) {
 
 function filterStudents() {
   const q = document.getElementById('student-search').value.toLowerCase()
-  renderStudentsGrid(q ? allStudents.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)) : allStudents)
+  renderStudentsGrid(q
+    ? allStudents.filter(s => s.name.toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q))
+    : allStudents
+  )
 }
 
-// ── Teacher: Student Modal ────────────────────────────────────────────
+// ── Teacher: Student Modal ─────────────────────────────────────
 function openStudentModal(id) {
-  const modal = document.getElementById('modal-student')
   document.getElementById('modal-error').classList.add('hidden')
   document.getElementById('modal-student-id').value = id || ''
 
@@ -1053,13 +1157,11 @@ function openStudentModal(id) {
     document.getElementById('modal-password').required = true
   }
 
-  modal.classList.remove('hidden')
+  show('modal-student')
   document.getElementById('modal-name').focus()
 }
 
-function closeStudentModal() {
-  document.getElementById('modal-student').classList.add('hidden')
-}
+function closeStudentModal() { hide('modal-student') }
 
 async function submitStudentForm(e) {
   e.preventDefault()
@@ -1067,10 +1169,10 @@ async function submitStudentForm(e) {
   errEl.classList.add('hidden')
   const btn = document.getElementById('modal-submit-btn')
   btn.disabled = true
-  btn.textContent = 'Salvando...'
+  btn.textContent = 'Salvando…'
 
-  const id    = document.getElementById('modal-student-id').value
-  const body  = {
+  const id = document.getElementById('modal-student-id').value
+  const body = {
     name:  document.getElementById('modal-name').value,
     level: document.getElementById('modal-level').value,
   }
@@ -1086,11 +1188,8 @@ async function submitStudentForm(e) {
   }
 
   try {
-    if (id) {
-      await api('PATCH', `/students/${id}`, body)
-    } else {
-      await api('POST', '/students', body)
-    }
+    if (id) await api('PATCH', `/students/${id}`, body)
+    else    await api('POST', '/students', body)
     closeStudentModal()
     loadStudents()
   } catch (ex) {
@@ -1102,17 +1201,13 @@ async function submitStudentForm(e) {
   }
 }
 
-// ── Teacher: Delete Modal ─────────────────────────────────────────────
 function openConfirmModal(id, name) {
   deleteTargetId = id
   document.getElementById('confirm-name').textContent = `Isso removerá todos os dados de "${name}".`
-  document.getElementById('modal-confirm').classList.remove('hidden')
+  show('modal-confirm')
 }
 
-function closeConfirmModal() {
-  deleteTargetId = null
-  document.getElementById('modal-confirm').classList.add('hidden')
-}
+function closeConfirmModal() { deleteTargetId = null; hide('modal-confirm') }
 
 async function confirmDelete() {
   if (!deleteTargetId) return
@@ -1120,29 +1215,26 @@ async function confirmDelete() {
     await api('DELETE', `/students/${deleteTargetId}`)
     closeConfirmModal()
     loadStudents()
-  } catch (ex) {
-    alert(ex.message)
-  }
+  } catch (ex) { alert(ex.message) }
 }
 
-// ── Teacher: Ranking ──────────────────────────────────────────────────
+// ── Teacher: Ranking ───────────────────────────────────────────
 async function loadTeacherRanking(filter) {
   document.querySelectorAll('.trank-filter-btn').forEach(btn => {
     const active = btn.textContent.trim() === (filter === 'global' ? 'Global' : filter)
-    btn.classList.toggle('bg-brand-600', active)
-    btn.classList.toggle('text-white', active)
-    btn.classList.toggle('bg-slate-800', !active)
-    btn.classList.toggle('text-slate-300', !active)
+    btn.classList.toggle('bg-lime-300', active)
+    btn.classList.toggle('text-zinc-950', active)
+    btn.classList.toggle('bg-zinc-800', !active)
+    btn.classList.toggle('text-zinc-400', !active)
   })
 
   document.getElementById('t-ranking-table').innerHTML = `<div class="p-4 space-y-2">${skeleton(10)}</div>`
-
   const path = filter === 'global' ? '/ranking/global' : `/ranking/level/${filter}`
   const { ranking } = await api('GET', path)
   renderRankingTable('t-ranking-table', ranking)
 }
 
-// ── Teacher: Content list ─────────────────────────────────────────────
+// ── Teacher: Content list ──────────────────────────────────────
 let allContent = []
 let deleteContentTargetId = null
 
@@ -1156,7 +1248,6 @@ function filterContent() {
   const level = document.getElementById('content-filter-level').value
   const type  = document.getElementById('content-filter-type').value
   const rule  = document.getElementById('content-filter-rule').value
-
   const filtered = allContent.filter(c =>
     (!level || c.level === level) &&
     (!type  || c.type === type) &&
@@ -1167,54 +1258,52 @@ function filterContent() {
 
 const contentTypeLabel = { lesson: 'Lição', quiz: 'Quiz', exercise: 'Exercício' }
 const contentTypeBadge = {
-  lesson:   'bg-blue-500/15 text-blue-400',
-  quiz:     'bg-purple-500/15 text-purple-400',
-  exercise: 'bg-orange-500/15 text-orange-400',
+  lesson:   'bg-sky-500/12 text-sky-400 border border-sky-500/20',
+  quiz:     'bg-violet-500/12 text-violet-400 border border-violet-500/20',
+  exercise: 'bg-amber-500/12 text-amber-400 border border-amber-500/20',
 }
 
 function renderContentList(items) {
   const el = document.getElementById('content-list')
   if (!items.length) {
     el.innerHTML = `
-      <div class="text-center py-12">
-        <div class="text-4xl mb-3">📚</div>
-        <p class="text-slate-400 text-sm">Nenhum conteúdo encontrado.</p>
-        <p class="text-slate-600 text-xs mt-1">Clique em "Novo Conteúdo" para começar.</p>
+      <div class="text-center py-14">
+        <div class="text-3xl mb-3">📚</div>
+        <p class="text-zinc-500 text-sm">Nenhum conteúdo encontrado.</p>
+        <p class="text-zinc-700 text-xs mt-1">Clique em "Novo" para começar.</p>
       </div>`
     return
   }
-
   el.innerHTML = `
-    <div class="divide-y divide-slate-800">
+    <div>
       ${items.map(c => `
-        <div class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-800/50 transition group">
+        <div class="list-row flex items-center gap-4 px-5 py-3.5 hover:bg-zinc-900/60 transition group">
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-white truncate">${c.title}</div>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="inline-block px-2 py-0.5 rounded-md text-xs font-semibold ${contentTypeBadge[c.type] || 'bg-slate-700 text-slate-300'}">${contentTypeLabel[c.type] || c.type}</span>
+            <div class="text-sm text-zinc-100 truncate">${c.title}</div>
+            <div class="flex items-center gap-1.5 mt-1">
+              <span class="badge ${contentTypeBadge[c.type] || 'bg-zinc-800 text-zinc-400'}">${contentTypeLabel[c.type] || c.type}</span>
               ${levelBadge(c.level)}
-              <span class="text-xs text-slate-600">Regra ${c.rule_number}</span>
+              <span class="text-xs text-zinc-700">R${c.rule_number}</span>
             </div>
           </div>
           <div class="text-right flex-shrink-0 hidden sm:block">
-            <div class="text-amber-400 text-xs font-semibold">${c.points_reward} pts</div>
-            <div class="text-slate-600 text-xs">ordem ${c.order_index}</div>
+            <div class="mono text-amber-400 text-xs">${c.points_reward}pts</div>
+            <div class="text-zinc-700 text-xs">#${c.order_index}</div>
           </div>
           <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-            <button onclick="openContentModal('${c.id}')" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            <button onclick="openContentModal('${c.id}')" class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-100 hover:border-zinc-700 transition">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
-            <button onclick="openConfirmContentModal('${c.id}', ${JSON.stringify(c.title).replace(/"/g, '&quot;')})" class="p-1.5 rounded-lg bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-400 transition">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <button onclick="openConfirmContentModal('${c.id}', ${JSON.stringify(c.title).replace(/"/g, '&quot;')})" class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-red-400 hover:border-red-900 transition">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
         </div>
       `).join('')}
-    </div>
-  `
+    </div>`
 }
 
-// ── Teacher: Content Modal ────────────────────────────────────────────
+// ── Teacher: Content Modal ─────────────────────────────────────
 function openContentModal(id) {
   document.getElementById('modal-content-error').classList.add('hidden')
   document.getElementById('modal-content-id').value = id || ''
@@ -1228,8 +1317,7 @@ function openContentModal(id) {
     document.getElementById('modal-content-rule').value  = c?.rule_number || '1'
     document.getElementById('modal-content-points').value = c?.points_reward ?? 10
     document.getElementById('modal-content-order').value  = c?.order_index ?? 0
-    const body = c?.body && Object.keys(c.body).length ? JSON.stringify(c.body, null, 2) : ''
-    document.getElementById('modal-content-body').value = body
+    document.getElementById('modal-content-body').value  = c?.body && Object.keys(c.body).length ? JSON.stringify(c.body, null, 2) : ''
   } else {
     document.getElementById('modal-content-title').textContent = 'Novo Conteúdo'
     document.getElementById('content-form').reset()
@@ -1238,13 +1326,11 @@ function openContentModal(id) {
     document.getElementById('modal-content-level').value  = 'B1'
   }
 
-  document.getElementById('modal-content').classList.remove('hidden')
+  show('modal-content')
   document.getElementById('modal-content-titleval').focus()
 }
 
-function closeContentModal() {
-  document.getElementById('modal-content').classList.add('hidden')
-}
+function closeContentModal() { hide('modal-content') }
 
 async function submitContentForm(e) {
   e.preventDefault()
@@ -1252,11 +1338,10 @@ async function submitContentForm(e) {
   errEl.classList.add('hidden')
   const btn = document.getElementById('modal-content-submit-btn')
   btn.disabled = true
-  btn.textContent = 'Salvando...'
+  btn.textContent = 'Salvando…'
 
   const id = document.getElementById('modal-content-id').value
   const bodyRaw = document.getElementById('modal-content-body').value.trim()
-
   let bodyParsed = {}
   if (bodyRaw) {
     try { bodyParsed = JSON.parse(bodyRaw) } catch {
@@ -1279,11 +1364,8 @@ async function submitContentForm(e) {
   }
 
   try {
-    if (id) {
-      await api('PATCH', `/content/${id}`, payload)
-    } else {
-      await api('POST', '/content', payload)
-    }
+    if (id) await api('PATCH', `/content/${id}`, payload)
+    else    await api('POST', '/content', payload)
     closeContentModal()
     loadContent()
   } catch (ex) {
@@ -1295,17 +1377,13 @@ async function submitContentForm(e) {
   }
 }
 
-// ── Teacher: Delete Content Modal ─────────────────────────────────────
 function openConfirmContentModal(id, name) {
   deleteContentTargetId = id
   document.getElementById('confirm-content-name').textContent = `Isso removerá o conteúdo "${name}".`
-  document.getElementById('modal-confirm-content').classList.remove('hidden')
+  show('modal-confirm-content')
 }
 
-function closeConfirmContentModal() {
-  deleteContentTargetId = null
-  document.getElementById('modal-confirm-content').classList.add('hidden')
-}
+function closeConfirmContentModal() { deleteContentTargetId = null; hide('modal-confirm-content') }
 
 async function confirmDeleteContent() {
   if (!deleteContentTargetId) return
@@ -1313,27 +1391,23 @@ async function confirmDeleteContent() {
     await api('DELETE', `/content/${deleteContentTargetId}`)
     closeConfirmContentModal()
     loadContent()
-  } catch (ex) {
-    alert(ex.message)
-  }
+  } catch (ex) { alert(ex.message) }
 }
 
-// ── Teacher: CSV Import ───────────────────────────────────────────────
+// ── Teacher: CSV Import ────────────────────────────────────────
 let importFile = null
 
 function openImportModal() {
   importFile = null
   document.getElementById('import-file-input').value = ''
-  document.getElementById('import-filename').textContent = 'Clique ou arraste um arquivo .csv'
+  document.getElementById('import-filename').textContent = 'Clique ou arraste um .csv'
   document.getElementById('import-submit-btn').disabled = true
   document.getElementById('import-idle').classList.remove('hidden')
   document.getElementById('import-result').classList.add('hidden')
-  document.getElementById('modal-import-csv').classList.remove('hidden')
+  show('modal-import-csv')
 }
 
-function closeImportModal() {
-  document.getElementById('modal-import-csv').classList.add('hidden')
-}
+function closeImportModal() { hide('modal-import-csv') }
 
 function onImportFileChange(e) {
   const file = e.target.files?.[0]
@@ -1345,22 +1419,19 @@ function onImportFileChange(e) {
 
 async function submitImportCSV() {
   if (!importFile) return
-
   const btn = document.getElementById('import-submit-btn')
   btn.disabled = true
-  btn.textContent = 'Importando...'
+  btn.textContent = 'Importando…'
 
   try {
     const token = localStorage.getItem('token')
     const fd = new FormData()
     fd.append('file', importFile)
-
     const res = await fetch(API + '/content/import-csv', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: fd,
     })
-
     const data = await res.json().catch(() => ({}))
     if (!res.ok && res.status !== 207) throw new Error(data.error || `HTTP ${res.status}`)
 
@@ -1371,15 +1442,12 @@ async function submitImportCSV() {
 
     const allErrors = [...(data.validation_errors || []), ...(data.insert_errors || [])]
     if (allErrors.length) {
-      document.getElementById('result-errors').innerHTML = allErrors
-        .map(e => `<div>${e}</div>`).join('')
+      document.getElementById('result-errors').innerHTML = allErrors.map(e => `<div>${e}</div>`).join('')
       document.getElementById('result-errors-wrap').classList.remove('hidden')
     } else {
       document.getElementById('result-errors-wrap').classList.add('hidden')
     }
-
     document.getElementById('import-result').classList.remove('hidden')
-
     if ((data.imported ?? 0) > 0) loadContent()
   } catch (ex) {
     alert('Erro ao importar: ' + ex.message)
@@ -1401,30 +1469,26 @@ function downloadCSVTemplate() {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = 'template-conteudo.csv'
-  a.click()
+  a.href = url; a.download = 'template-conteudo.csv'; a.click()
   URL.revokeObjectURL(url)
 }
 
-// ── Close modals on backdrop click ────────────────────────────────────
-document.getElementById('modal-student').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeStudentModal()
-})
-document.getElementById('modal-confirm').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeConfirmModal()
-})
-document.getElementById('modal-content').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeContentModal()
-})
-document.getElementById('modal-confirm-content').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeConfirmContentModal()
-})
-document.getElementById('modal-import-csv').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeImportModal()
+// ── Backdrop click to close modals ────────────────────────────
+;['modal-student','modal-confirm','modal-content','modal-confirm-content','modal-import-csv'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) {
+      const closers = {
+        'modal-student': closeStudentModal,
+        'modal-confirm': closeConfirmModal,
+        'modal-content': closeContentModal,
+        'modal-confirm-content': closeConfirmContentModal,
+        'modal-import-csv': closeImportModal,
+      }
+      closers[id]?.()
+    }
+  })
 })
 
-// ── Boot ──────────────────────────────────────────────────────────────
 boot()
 </script>
 </body>
